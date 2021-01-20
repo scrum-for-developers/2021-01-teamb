@@ -4,6 +4,7 @@ import de.codecentric.psd.worblehat.web.validation.ISBN;
 import de.codecentric.psd.worblehat.web.validation.Numeric;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.hibernate.validator.constraints.Range;
 
 /** This class represent the form data of the add book form. */
 public class BookDataFormData {
@@ -18,6 +19,7 @@ public class BookDataFormData {
   @NotEmpty(message = "{empty.bookDataFormData.yearOfPublication}")
   @Numeric(message = "{notvalid.bookDataFormData.yearOfPublication}")
   @Length(message = "{invalid.length.bookDataFormData.yearOfPublication}", min = 4, max = 4)
+  @Range(message = "{invalid.range.bookDataFormData.yearOfPublication}", max = 2021)
   private String yearOfPublication;
 
   @NotEmpty(message = "{empty.bookDataFormData.isbn}")
