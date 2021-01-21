@@ -4,6 +4,7 @@ import de.codecentric.psd.worblehat.domain.Book;
 import de.codecentric.psd.worblehat.domain.BookService;
 import de.codecentric.psd.worblehat.domain.Borrowing;
 import de.codecentric.psd.worblehat.web.formdata.BookBorrowFormData;
+import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
@@ -43,21 +44,23 @@ public class BorrowBookController {
     if (result.hasErrors()) {
       return "borrow";
     }
-    Set<Book> books = bookService.findBooksByIsbn(borrowFormData.getIsbn());
-    if (books.isEmpty()) {
-      result.rejectValue("isbn", "noBookExists");
-      return "borrow";
+    var borrowings = new LinkedList<Borrowing>();
+    for (var isbn : borrowFormData.getIsbn().split(" ")) {
+      Set<Book> books = bookService.findBooksByIsbn(isbn);
+      if (books.isEmpty()) {
+        result.rejectValue("isbn", "noBookExists");
+        return "borrow";
+      }
+      Optional<Borrowing> borrowing = bookService.borrowBook(isbn, borrowFormData.getEmail());
+      if (borrowing.isPresent()) {
+        borrowings.add(borrowing.get());
+      }
     }
-    Optional<Borrowing> borrowing =
-        bookService.borrowBook(borrowFormData.getIsbn(), borrowFormData.getEmail());
-
-    return borrowing
-        .map(b -> "home")
-        .orElseGet(
-            () -> {
-              result.rejectValue("isbn", "noBorrowableBooks");
-              return "borrow";
-            });
+    if (!borrowings.isEmpty()) {
+      return "home";
+    }
+    result.rejectValue("isbn", "noBorrowableBooks");
+    return "borrow";
   }
 
   @ExceptionHandler(Exception.class)
