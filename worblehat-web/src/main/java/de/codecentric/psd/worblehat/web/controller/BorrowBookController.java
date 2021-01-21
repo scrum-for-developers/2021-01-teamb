@@ -44,20 +44,22 @@ public class BorrowBookController {
     if (result.hasErrors()) {
       return "borrow";
     }
-    var borrowings = new LinkedList<Borrowing>();
-    for (var isbn : borrowFormData.getIsbn().split(" ")) {
-      Set<Book> books = bookService.findBooksByIsbn(isbn);
-      if (books.isEmpty()) {
-        result.rejectValue("isbn", "noBookExists");
-        return "borrow";
+    if (borrowFormData.getIsbn() != null) {
+      var borrowings = new LinkedList<Borrowing>();
+      for (var isbn : borrowFormData.getIsbn().split(" ")) {
+        Set<Book> books = bookService.findBooksByIsbn(isbn);
+        if (books.isEmpty()) {
+          result.rejectValue("isbn", "noBookExists");
+          return "borrow";
+        }
+        Optional<Borrowing> borrowing = bookService.borrowBook(isbn, borrowFormData.getEmail());
+        if (borrowing.isPresent()) {
+          borrowings.add(borrowing.get());
+        }
       }
-      Optional<Borrowing> borrowing = bookService.borrowBook(isbn, borrowFormData.getEmail());
-      if (borrowing.isPresent()) {
-        borrowings.add(borrowing.get());
+      if (!borrowings.isEmpty()) {
+        return "home";
       }
-    }
-    if (!borrowings.isEmpty()) {
-      return "home";
     }
     result.rejectValue("isbn", "noBorrowableBooks");
     return "borrow";
